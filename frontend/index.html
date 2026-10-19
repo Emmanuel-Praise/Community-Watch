@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Community Watch</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <path d="M12 3l7 3v5c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3z"/>
+            <path d="M9.5 12l1.7 1.7 3.4-3.7"/>
+          </svg>
+        </span>
+        <span class="brand-text">
+          <strong>Community Watch</strong>
+          <small>Community reports</small>
+        </span>
+      </div>
+
+      <nav class="sidebar-nav" aria-label="Main navigation">
+        <button type="button" class="nav-item active" data-view="reports">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+            <path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4M10 12h5M10 16h5"/>
+          </svg>
+          <span>Reports</span>
+          <span id="nav-pending-count" class="nav-badge hidden">0</span>
+        </button>
+        <button type="button" class="nav-item" data-view="heads">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+            <circle cx="9" cy="8" r="3"/><path d="M3 20c0-3.3 2.7-5 6-5s6 1.7 6 5"/>
+            <path d="M16 5.5a3 3 0 010 5M18.5 20c0-2.5-1.2-4.2-3-5"/>
+          </svg>
+          <span>Quarter Heads</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-note">
+        <strong>How routing works</strong>
+        <p>Verified quarter heads receive reports that mention their quarter or city.</p>
+      </div>
+    </aside>
+
+    <div class="main-column">
+      <header class="mobile-header">
+        <div class="brand compact">
+          <span class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+              <path d="M12 3l7 3v5c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3z"/>
+              <path d="M9.5 12l1.7 1.7 3.4-3.7"/>
+            </svg>
+          </span>
+          <span class="brand-text"><strong>Community Watch</strong><small>Community reports</small></span>
+        </div>
+        <nav class="mobile-nav" aria-label="Mobile navigation">
+          <button type="button" class="nav-pill active" data-view="reports">Reports</button>
+          <button type="button" class="nav-pill" data-view="heads">Quarter Heads</button>
+        </nav>
+      </header>
+
+      <main class="page">
+        <section id="view-reports" class="view">
+          <div class="page-heading">
+            <div>
+              <h1>Reports</h1>
+              <p>Anonymous reports from WhatsApp and dashboard entries.</p>
+            </div>
+            <div class="heading-actions">
+              <button type="button" id="refresh-reports" class="btn btn-secondary">Refresh</button>
+              <button type="button" id="open-report-form" class="btn btn-primary">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <path d="M12 5v14M5 12h14"/>
+                </svg>
+                Log a report
+              </button>
+            </div>
+          </div>
+
+          <div id="integration-banner" class="integration-banner hidden"></div>
+
+          <div class="stats-grid">
+            <article class="stat-card">
+              <span class="stat-label">Total reports</span>
+              <strong id="stat-total">-</strong>
+              <span class="stat-foot">all time</span>
+            </article>
+            <article class="stat-card">
+              <span class="stat-label">Pending review</span>
+              <strong id="stat-pending">-</strong>
+              <span class="stat-foot">waiting for the team</span>
+            </article>
+            <article class="stat-card">
+              <span class="stat-label">High priority</span>
+              <strong id="stat-high">-</strong>
+              <span class="stat-foot">needs attention first</span>
+            </article>
+            <article class="stat-card">
+              <span class="stat-label">Verified heads</span>
+              <strong id="stat-heads">-</strong>
+              <span class="stat-foot">receiving area reports</span>
+            </article>
+          </div>
+
+          <div class="toolbar">
+            <div class="search-wrap">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                <circle cx="11" cy="11" r="7"/><path d="M16.5 16.5L21 21"/>
+              </svg>
+              <input type="search" id="report-search" class="input" placeholder="Search description or location">
+            </div>
+            <select id="filter-type" class="input compact" aria-label="Filter by type">
+              <option value="">All types</option>
+              <option value="robbery">Robbery</option>
+              <option value="theft">Theft</option>
+              <option value="vandalism">Vandalism</option>
+              <option value="fire">Fire</option>
+              <option value="flood">Flood</option>
+              <option value="suspicious_activity">Suspicious activity</option>
+              <option value="medical_emergency">Medical emergency</option>
+              <option value="violence">Violence</option>
+              <option value="other">Other</option>
+            </select>
+            <select id="filter-status" class="input compact" aria-label="Filter by status">
+              <option value="">All statuses</option>
+              <option value="pending">Pending</option>
+              <option value="under_review">Under review</option>
+              <option value="verified">Verified</option>
+              <option value="dismissed">Dismissed</option>
+            </select>
+          </div>
+
+          <div class="card list-card">
+            <div id="reports-loading" class="state">Loading reports...</div>
+            <div id="reports-error" class="state error hidden"></div>
+            <div id="reports-empty" class="state hidden">
+              <strong>No reports found</strong>
+              <span>New WhatsApp and dashboard reports will appear here.</span>
+            </div>
+            <div id="reports-table-wrap" class="table-wrap hidden">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th class="w-id">#</th>
+                    <th class="w-type">Incident</th>
+                    <th class="w-status">Status</th>
+                    <th>Description and location</th>
+                    <th class="w-time">Received</th>
+                    <th class="w-actions"></th>
+                  </tr>
+                </thead>
+                <tbody id="reports-body"></tbody>
+              </table>
+            </div>
+            <div id="reports-mobile" class="mobile-list hidden"></div>
+          </div>
+        </section>
+
+        <section id="view-heads" class="view hidden">
+          <div class="page-heading">
+            <div>
+              <h1>Quarter Heads</h1>
+              <p>Area leaders. Only verified heads receive their area's reports on WhatsApp.</p>
+            </div>
+            <div class="heading-actions">
+              <button type="button" id="open-head-form" class="btn btn-primary">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <path d="M12 5v14M5 12h14"/>
+                </svg>
+                Register
+              </button>
+            </div>
+          </div>
+
+          <div id="heads-tabs" class="tabs" role="tablist" aria-label="Quarter head filters">
+            <button type="button" class="tab active" data-head-filter="">All</button>
+            <button type="button" class="tab" data-head-filter="pending">
+              Applications <span id="heads-pending-count" class="tab-badge hidden">0</span>
+            </button>
+            <button type="button" class="tab" data-head-filter="verified">Verified</button>
+            <button type="button" class="tab" data-head-filter="rejected">Rejected</button>
+          </div>
+
+          <div class="card list-card">
+            <div id="heads-loading" class="state">Loading quarter heads...</div>
+            <div id="heads-error" class="state error hidden"></div>
+            <div id="heads-empty" class="state hidden">
+              <strong>No quarter heads found</strong>
+              <span>Applications from this page or WhatsApp will appear here.</span>
+            </div>
+            <div id="heads-table-wrap" class="table-wrap hidden">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th class="w-id">#</th>
+                    <th>Name</th>
+                    <th>Area</th>
+                    <th class="w-number">WhatsApp</th>
+                    <th class="w-status">Status</th>
+                    <th class="w-time">Applied</th>
+                    <th class="w-actions"></th>
+                  </tr>
+                </thead>
+                <tbody id="heads-body"></tbody>
+              </table>
+            </div>
+            <div id="heads-mobile" class="mobile-list hidden"></div>
+          </div>
+
+          <p class="footnote">
+            Registration also happens over WhatsApp when someone types
+            <strong>register as quarter head</strong>.
+          </p>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <div id="report-form-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="report-form-title">
+    <div class="modal-card">
+      <div class="modal-head">
+        <div>
+          <h2 id="report-form-title">Log a report</h2>
+          <p>Add a report received outside WhatsApp.</p>
+        </div>
+        <button type="button" class="icon-btn" data-close="report-form-modal" aria-label="Close">&times;</button>
+      </div>
+      <form id="report-form" class="modal-body">
+        <div class="form-grid">
+          <label class="field">
+            <span>Type</span>
+            <select id="form-type" class="input">
+              <option value="robbery">Robbery</option>
+              <option value="theft">Theft</option>
+              <option value="vandalism">Vandalism</option>
+              <option value="fire">Fire</option>
+              <option value="flood">Flood</option>
+              <option value="suspicious_activity">Suspicious activity</option>
+              <option value="medical_emergency">Medical emergency</option>
+              <option value="violence">Violence</option>
+              <option value="other" selected>Other</option>
+            </select>
+          </label>
+          <label class="field">
+            <span>Severity</span>
+            <select id="form-severity" class="input">
+              <option value="low">Low</option>
+              <option value="medium" selected>Medium</option>
+              <option value="high">High</option>
+            </select>
+          </label>
+        </div>
+
+        <label class="field">
+          <span>What happened?</span>
+          <textarea id="form-description" class="input textarea" maxlength="2000" required placeholder="Example: Smoke rising from stalls behind the market."></textarea>
+        </label>
+
+        <label class="field">
+          <span>Area name (optional)</span>
+          <input id="form-location" class="input" maxlength="200" placeholder="Example: Mokolo market, Yaounde">
+        </label>
+
+        <div class="form-grid">
+          <label class="field">
+            <span>Latitude (optional)</span>
+            <input id="form-latitude" class="input" type="number" step="any" placeholder="e.g. 3.848">
+          </label>
+          <label class="field">
+            <span>Longitude (optional)</span>
+            <input id="form-longitude" class="input" type="number" step="any" placeholder="e.g. 11.502">
+          </label>
+        </div>
+
+        <p id="report-form-error" class="form-error hidden"></p>
+
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" data-close="report-form-modal">Cancel</button>
+          <button type="submit" id="report-submit" class="btn btn-primary">Submit report</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="head-form-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="head-form-title">
+    <div class="modal-card">
+      <div class="modal-head">
+        <div>
+          <h2 id="head-form-title">Register quarter head</h2>
+          <p>Starts as an application, pending verification.</p>
+        </div>
+        <button type="button" class="icon-btn" data-close="head-form-modal" aria-label="Close">&times;</button>
+      </div>
+      <form id="head-form" class="modal-body">
+        <label class="field">
+          <span>Full name</span>
+          <input id="head-name" class="input" maxlength="120" required placeholder="Example: Joseph Moko">
+        </label>
+        <label class="field">
+          <span>WhatsApp number</span>
+          <input id="head-number" class="input" maxlength="30" required placeholder="Example: +237 6 00 00 00 00">
+          <small>Shown as ***last 3 digits on the list. Used to forward reports.</small>
+        </label>
+        <div class="form-grid">
+          <label class="field">
+            <span>Quarter or area</span>
+            <input id="head-quarter" class="input" maxlength="150" required placeholder="Example: Mokolo">
+          </label>
+          <label class="field">
+            <span>Town or city</span>
+            <input id="head-city" class="input" maxlength="150" placeholder="Example: Yaounde">
+          </label>
+        </div>
+        <label class="field">
+          <span>Notes (optional)</span>
+          <textarea id="head-notes" class="input textarea small" maxlength="1000" placeholder="Anything the team should know"></textarea>
+        </label>
+
+        <p id="head-form-error" class="form-error hidden"></p>
+
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" data-close="head-form-modal">Cancel</button>
+          <button type="submit" id="head-submit" class="btn btn-primary">Register</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="detail-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="detail-title">
+    <div class="modal-card wide">
+      <div class="modal-head">
+        <div>
+          <h2 id="detail-title">Report</h2>
+          <p id="detail-subtitle"></p>
+        </div>
+        <button type="button" class="icon-btn" data-close="detail-modal" aria-label="Close">&times;</button>
+      </div>
+      <div id="detail-body" class="modal-body detail-body"></div>
+      <div class="modal-actions split">
+        <div class="action-group">
+          <button type="button" id="detail-approve" class="btn btn-secondary">Approve</button>
+          <button type="button" id="detail-dismiss" class="btn btn-danger">Dismiss</button>
+        </div>
+        <button type="button" class="btn btn-secondary" data-close="detail-modal">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
