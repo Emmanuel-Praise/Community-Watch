@@ -132,24 +132,7 @@ LOCATION_CUES = (
     " quartier ",
 )
 
-VAGUE_LOCATIONS = {
-    "unknown",
-    "not specified",
-    "unspecified",
-    "not provided",
-    "no location",
-    "somewhere",
-    "here",
-    "there",
-    "n/a",
-    "none",
-    "my area",
-    "the area",
-    "this area",
-    "my quarter",
-    "the quarter",
-    "our area",
-}
+
 
 PHONE_RE = re.compile(r"\+?\d[\d\s().-]{7,}\d")
 EMAIL_RE = re.compile(r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b")
@@ -462,7 +445,7 @@ def split_area(area_text: str) -> tuple[str, str | None]:
 
 
 def is_vague_location(value: str) -> bool:
-    return normalize(value).strip(" .,-") in VAGUE_LOCATIONS
+    return ai.is_vague_location(value)
 
 
 def has_location(report: dict) -> bool:
@@ -520,6 +503,14 @@ def create_report_from_text(text: str, from_number: str, source: str = "whatsapp
         send_text(
             from_number,
             confirmation_reply(report["type"], report["priority"], report["id"]),
+        )
+        logger.info(
+            "Report #%s saved: type=%s location=%r latitude=%r longitude=%r",
+            report["id"],
+            report.get("type"),
+            report.get("location_name"),
+            report.get("latitude"),
+            report.get("longitude"),
         )
         if not has_location(report):
             set_state(from_number, "awaiting_location", report_id=report["id"])

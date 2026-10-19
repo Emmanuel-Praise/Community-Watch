@@ -145,6 +145,48 @@ STOP_WORDS = {
     "none",
 }
 
+GENERIC_LOCATION_WORDS = {
+    "shop",
+    "house",
+    "home",
+    "street",
+    "road",
+    "market",
+    "church",
+    "mosque",
+    "school",
+    "hospital",
+    "office",
+    "compound",
+    "neighbourhood",
+    "neighborhood",
+    "area",
+    "place",
+    "bus stop",
+    "junction",
+    "village",
+    "town",
+    "city",
+    "quarter",
+}
+
+
+def is_vague_location(value: str) -> bool:
+    text = " ".join((value or "").split()).strip(" .,-").lower()
+    if not text:
+        return True
+    if text in STOP_WORDS or text in GENERIC_LOCATION_WORDS:
+        return True
+    return bool(
+        re.fullmatch(
+            r"(?:my|our|the|this|that)\s+"
+            r"(?:shop|house|home|street|road|market|church|mosque|school|"
+            r"office|compound|neighbourhood|neighborhood|area|place|bus stop|"
+            r"junction|village|town|city|quarter)",
+            text,
+        )
+    )
+
 
 class AIError(Exception):
     pass
@@ -170,7 +212,7 @@ def _clean_location(value: Any) -> str | None:
     text = re.split(r"[,.;!?]", text, maxsplit=1)[0].strip(" -")
     if not text or not re.search(r"[A-Za-z\u00C0-\u024F]", text):
         return None
-    if text.lower() in STOP_WORDS:
+    if is_vague_location(text):
         return None
     return text[:200]
 
