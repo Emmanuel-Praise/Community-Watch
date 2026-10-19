@@ -133,6 +133,16 @@ STOP_WORDS = {
     "this morning",
     "this evening",
     "10 minutes ago",
+    "unknown",
+    "not specified",
+    "unspecified",
+    "not provided",
+    "no location",
+    "somewhere",
+    "here",
+    "there",
+    "n/a",
+    "none",
 }
 
 
@@ -255,7 +265,9 @@ def _build_prompt(text: str) -> list[dict[str, str]]:
         "You extract community incident reports for a safety dashboard. "
         "Read English, French, or Cameroonian Pidgin. Return ONLY valid JSON. "
         "Do not use markdown. Never claim an incident is confirmed or verified. "
-        "Do not include names, phone numbers, or email addresses.\n\n"
+        "Do not include names, phone numbers, or email addresses. "
+        "If the report does not mention a real place, set location to null. "
+        "Never guess a location or use vague placeholders like unknown or here.\n\n"
         "Allowed incident types: robbery, theft, vandalism, fire, flood, "
         "suspicious_activity, medical_emergency, violence, other.\n"
         "Allowed priorities: low, medium, high.\n\n"

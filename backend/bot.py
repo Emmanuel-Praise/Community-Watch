@@ -132,6 +132,25 @@ LOCATION_CUES = (
     " quartier ",
 )
 
+VAGUE_LOCATIONS = {
+    "unknown",
+    "not specified",
+    "unspecified",
+    "not provided",
+    "no location",
+    "somewhere",
+    "here",
+    "there",
+    "n/a",
+    "none",
+    "my area",
+    "the area",
+    "this area",
+    "my quarter",
+    "the quarter",
+    "our area",
+}
+
 PHONE_RE = re.compile(r"\+?\d[\d\s().-]{7,}\d")
 EMAIL_RE = re.compile(r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b")
 
@@ -442,6 +461,17 @@ def split_area(area_text: str) -> tuple[str, str | None]:
     return clean, None
 
 
+def is_vague_location(value: str) -> bool:
+    return normalize(value).strip(" .,-") in VAGUE_LOCATIONS
+
+
+def has_location(report: dict) -> bool:
+    if report.get("latitude") is not None and report.get("longitude") is not None:
+        return True
+    location_name = report.get("location_name") or ""
+    return bool(location_name.strip()) and not is_vague_location(location_name)
+
+
 def notify_heads(report: dict, skip_number: str = "") -> int:
     if not report:
         return 0
@@ -491,7 +521,7 @@ def create_report_from_text(text: str, from_number: str, source: str = "whatsapp
             from_number,
             confirmation_reply(report["type"], report["priority"], report["id"]),
         )
-        if not report.get("location_name") and report.get("latitude") is None:
+        if not has_location(report):
             set_state(from_number, "awaiting_location", report_id=report["id"])
             send_text(from_number, ask_location_reply())
         else:
@@ -566,7 +596,7 @@ def handle_location_text(body: str, from_number: str, state: dict) -> int | None
         clear_state(from_number)
         return None
     location = " ".join(body.split())[:200]
-    if len(location) < 2:
+    if len(location) < 2 or is_vague_location(location):
         send_text(from_number, ask_location_reply())
         return 0
     report_id = state.get("report_id")
