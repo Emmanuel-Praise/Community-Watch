@@ -100,53 +100,94 @@ The script only adds data when the database has no reports.
 
 ## Deploy on Render
 
-This repository includes `render.yaml`. One Render web service runs the API and
-serves the frontend from the same URL. There is no separate static site to
-configure.
+We deploy one web service. It runs the FastAPI backend and serves the plain
+frontend from the same URL. There is no Blueprint or `render.yaml`; all settings
+are entered in the Render dashboard.
 
-### Steps
+### Before deploying
 
-1. Push this repository to GitHub.
-2. In Render, click **New > Blueprint**.
-3. Connect the GitHub repository `Emmanuel-Praise/Community-Watch`.
-4. Render reads `render.yaml` and creates the `community-watch` web service.
-5. Click **Apply**. Wait for the build and deploy to finish.
-6. Open the service's **Environment** page and fill in the secrets marked
-   `sync: false`:
-   - `WHATSAPP_VERIFY_TOKEN` - any secret phrase you choose
-   - `WHATSAPP_ACCESS_TOKEN`
-   - `WHATSAPP_PHONE_NUMBER_ID`
-   - `WHATSAPP_APP_SECRET` - optional
-   - `OPENROUTER_API_KEY`
-   - `ELEVENLABS_API_KEY`
-7. Save the environment variables. Render redeploys the service automatically.
-8. Open your Render URL:
-   - Dashboard: `https://YOUR-SERVICE.onrender.com`
-   - Health check: `https://YOUR-SERVICE.onrender.com/api/health`
-   - API docs: `https://YOUR-SERVICE.onrender.com/docs`
-9. In Meta, set the WhatsApp webhook callback URL to:
+Push the latest code to GitHub:
 
-   ```
-   https://YOUR-SERVICE.onrender.com/api/whatsapp/webhook
-   ```
+```powershell
+cd "C:\Users\HP\Desktop\Community Watch"
+git add .
+git commit -m "Update project"
+git push
+```
 
-10. Use the same `WHATSAPP_VERIFY_TOKEN` in Meta, subscribe to the `messages`
-    field, and send a test message from an allowed number.
+### Create the Render web service
 
-### Render notes
+1. Sign in to [render.com](https://render.com).
+2. Click **New > Web Service**.
+3. Connect your GitHub account and select
+   `Emmanuel-Praise/Community-Watch`.
+4. Fill in the form:
+   - **Name:** `community-watch`
+   - **Region:** closest to you
+   - **Branch:** `main`
+   - **Root Directory:** `backend`
+   - **Runtime:** `Python 3`
+   - **Build Command:** `pip install -r requirements.txt`
+   - **Start Command:** `uvicorn main:app --host 0.0.0.0 --port $PORT`
+   - **Instance Type:** Free
+5. Open **Advanced** and set:
+   - **Health Check Path:** `/api/health`
+6. Click **Create Web Service**.
 
-- The free plan spins down after inactivity, so the first request after a break
-  can take 30-60 seconds.
-- The free plan has no persistent disk. The SQLite database is deleted when the
-  service redeploys or restarts. For a hackathon demo this is usually fine:
-  run `python seed_demo.py` from the Render Shell after a restart, or send a new
-  WhatsApp report.
-- If you need data to survive restarts, add a Render Disk mounted at
-  `/var/data` and set `DATABASE_PATH=/var/data/community_watch.db`.
-- The frontend automatically calls `/api` when served by Render, so no API URL
-  editing is needed.
-- To update the deployment, push a new commit to GitHub. Render redeploys
-  automatically.
+Render installs the packages and starts the server. The first deploy takes a
+few minutes.
+
+### Add environment variables
+
+In the service, open **Environment** and add:
+
+| Key | Value |
+| --- | --- |
+| `PYTHON_VERSION` | `3.11.11` |
+| `BOT_NAME` | `Community Watch` |
+| `CORS_ALLOW_ALL` | `true` |
+| `WHATSAPP_VERIFY_TOKEN` | any secret phrase you choose |
+| `WHATSAPP_ACCESS_TOKEN` | from Meta |
+| `WHATSAPP_PHONE_NUMBER_ID` | from Meta |
+| `WHATSAPP_APP_SECRET` | optional, from Meta |
+| `OPENROUTER_API_KEY` | your OpenRouter key |
+| `OPENROUTER_MODEL` | `openrouter/auto` |
+| `ELEVENLABS_API_KEY` | your ElevenLabs key |
+| `ELEVENLABS_STT_MODEL` | `scribe_v2` |
+
+Click **Save Changes**. Render redeploys automatically.
+
+### Test the deployment
+
+Open these URLs, replacing `YOUR-SERVICE` with your Render subdomain:
+
+- Dashboard: `https://YOUR-SERVICE.onrender.com`
+- Health check: `https://YOUR-SERVICE.onrender.com/api/health`
+- API docs: `https://YOUR-SERVICE.onrender.com/docs`
+
+### Connect WhatsApp
+
+In Meta's WhatsApp webhook settings, use:
+
+```
+https://YOUR-SERVICE.onrender.com/api/whatsapp/webhook
+```
+
+Enter the same `WHATSAPP_VERIFY_TOKEN` in Meta, subscribe to the `messages`
+field, then send a test WhatsApp message from an allowed number.
+
+### Important Render notes
+
+- The free plan sleeps after inactivity. The first request after a break can
+  take 30-60 seconds.
+- The free plan has no persistent disk, so the SQLite database is deleted when
+  the service restarts or redeploys. For a demo this is usually fine: run
+  `python seed_demo.py` in the Render Shell, or send a new WhatsApp report.
+- For persistent data, add a Render Disk mounted at `/var/data` and set
+  `DATABASE_PATH` to `/var/data/community_watch.db`.
+- The frontend automatically calls `/api` on Render, so no URL editing is
+  needed.
+- Push a new commit to GitHub to redeploy the latest code.
 
 ## WhatsApp Cloud API setup
 
